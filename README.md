@@ -99,7 +99,7 @@ Then, search for `syscall/js.valueCall` to find the valueCall function that need
   }
 },
 ```
-Almost done. Lastly, you need to add code to capture the JWT. Search for `echoMessages: file` and you will find the variable containing the list of headers sent to Ably. Right below that, add this line (the variable names will very likely not be accurate, you can find the same line accessing `ablyJwt` in authHeaders):
+Almost done. Lastly, you need to add code to capture the JWT. Search for `echoMessages: false` and you will find the variable containing the list of headers sent to Ably. Right below that, add this line (the variable names will very likely not be accurate, you can find the same line accessing `ablyJwt` in authHeaders):
 ```js
 globalThis.__LIGHTSPEED_JWT__ = _0xed754d("ablyJwt");
 ```
