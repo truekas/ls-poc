@@ -12,6 +12,17 @@ These cannot be in this repo because:
 To avoid issues, I recommend using version `5.1.2.1763770643`. If you need help adapting newer versions, you are on your own.\
 You can obtain the worker.js and classroom.wasm files from the Lightspeed extension source code. This can be obtained by logging in with your school account on Chrome on a personal device then extracting the extension source from the extensions folder located in your chrome profile directory. You can also manually download the crx through the update url.
 
+> [!IMPORTANT]
+> Lightspeed has started to roll out a fix as of April 23rd.
+> Some districts have still not received the update so use this while you can.
+
+## RECOMMENDED METHOD
+Place the classroom.wasm you obtained from the extension into the same directory as wasm-only.js. Then run:
+```bash
+$ node wasm-only.js
+```
+It will prompt you for the email and customer ID. Go to line 815 and uncomment what messages you want to send.
+
 ## Set-up wasm loader
 Once you have the files simply add them to the cloned repo directory. You will have to go into wasm-loader.js to the getManifest() function and paste your extension manifest there. You will also have to add the extension ID to wasm-loader.js at the top.
 
@@ -173,6 +184,8 @@ It is up to you to figure out how to view the video (anybody with mild HTML know
 
 Again I cannot guarantee that this will work all the time because it is way too finicky, but let me know if you get it working consistently!
 
+## Web Viewer
+Run `pnpm i`, place the classroom.wasm at the root of the repo, then run `pnpm dev` to start the web viewer.
 
 ## Final Notes
 Please don't use this POC for destructive purposes. I am not responsible for any mischevious actions you may commit. As you may know Lightspeed has been sleeping on this for 3 months and I don't really expect a fix for another week (or more?...). Hopefully this will make them understand the real severity of the situation and fix it faster. Lastly, if you happen to be a school IT guy, send this to your higher ups 🙂
