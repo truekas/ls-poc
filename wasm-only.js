@@ -11,11 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 // --- Configuration ---
-<<<<<<< HEAD
-let CONFIG = {
-=======
 const CONFIG = {
->>>>>>> 2c79eab (add wasm only)
   email: "",
   customerId: "",
   ablyApiKey: "G52kOXvb7p7UbwFRV3ahn74m6xklosio2XUdLlTL",
@@ -857,10 +853,7 @@ function ask(question) {
     })
   );
 }
-<<<<<<< HEAD
 // COMMENT OUT IF USING WEB VIEWER
-=======
->>>>>>> 2c79eab (add wasm only)
 (async () => {
   try {
 
