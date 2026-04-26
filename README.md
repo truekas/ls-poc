@@ -203,7 +203,7 @@ If you received a message saying the LS One extension could not be found, you ei
 
 If you receive a 403 error while connecting to Ably, check that you have the right `classroom.wasm`, right email, and try moving to a school IP.
 
-If you received no errors, congratulations! Simply leave the script running and you will be immune to unlocks, tab closing, and screen viewing (experimental).
+If you received no errors, congratulations! Simply leave the script running and you will be immune to being locked by teachers, tab closing, and screen viewing (experimental).
 
 ## Final Notes
 Please don't use this POC for destructive purposes. I am not responsible for any mischevious actions you may commit. As you may know Lightspeed has been sleeping on this for 3 months and I don't really expect a fix for another week (or more?...). Hopefully this will make them understand the real severity of the situation and fix it faster. Lastly, if you happen to be a school IT guy, send this to your higher ups 🙂
