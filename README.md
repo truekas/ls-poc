@@ -12,16 +12,12 @@ These cannot be in this repo because:
 To avoid issues, I recommend using version `5.1.2.1763770643`. If you need help adapting newer versions, you are on your own.\
 You can obtain the worker.js and classroom.wasm files from the Lightspeed extension source code. This can be obtained by logging in with your school account on Chrome on a personal device then extracting the extension source from the extensions folder located in your chrome profile directory. You can also manually download the crx through the update url.
 
-> [!IMPORTANT]
-> Lightspeed has started to roll out a fix as of April 23rd.
-> Some districts have still not received the update so use this while you can.
-
 ## RECOMMENDED METHOD
-Place the classroom.wasm you obtained from the extension into the same directory as wasm-only.js. Then run:
+The easier method of this exploit is to first obtain classroom.wasm from your extension source code, then paste it in the same directory as wasm-only.js, and run:
 ```bash
 $ node wasm-only.js
 ```
-It will prompt you for the email and customer ID. Go to line 815 and uncomment what messages you want to send.
+Enter an email and customer ID when prompted. This will connect to the ably channel. Go to line 815 and uncomment what you want to send messages. Credit: ktibow on discord
 
 ## Set-up wasm loader
 Once you have the files simply add them to the cloned repo directory. You will have to go into wasm-loader.js to the getManifest() function and paste your extension manifest there. You will also have to add the extension ID to wasm-loader.js at the top.

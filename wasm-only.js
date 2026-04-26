@@ -11,7 +11,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 // --- Configuration ---
+<<<<<<< HEAD
 let CONFIG = {
+=======
+const CONFIG = {
+>>>>>>> 2c79eab (add wasm only)
   email: "",
   customerId: "",
   ablyApiKey: "G52kOXvb7p7UbwFRV3ahn74m6xklosio2XUdLlTL",
@@ -617,8 +621,7 @@ function copyBytes(dst, src) {
 // STEP 1: Load the WASM and extract the JWT
 // ═══════════════════════════════════════════════════════════════
 
-export async function getJwtFromWasm(newConfig) {
-  if (newConfig) CONFIG = newConfig;
+async function getJwtFromWasm() {
   const wasmPath = path.join(__dirname, "classroom.wasm");
   if (!fs.existsSync(wasmPath)) throw new Error("classroom.wasm not found");
 
@@ -854,7 +857,10 @@ function ask(question) {
     })
   );
 }
+<<<<<<< HEAD
 // COMMENT OUT IF USING WEB VIEWER
+=======
+>>>>>>> 2c79eab (add wasm only)
 (async () => {
   try {
 
