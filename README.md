@@ -199,9 +199,9 @@ This will enable remote debugging. **Wait 15 seconds for the service worker to i
 ```bash
 $ node oauth-poc.js
 ```
-If you received a message saying the LS One extension could not be found, you either did not wait 15 seconds after launching Chrome, waited too long and the service worker went to sleep, or did not fill in the extension ID at the top of `oauth-poc.js`.\ 
+If you received a message saying the LS One extension could not be found, you either did not wait 15 seconds after launching Chrome, waited too long and the service worker went to sleep, or did not fill in the extension ID at the top of `oauth-poc.js`.
 
-If you receive a 403 error while connecting to Ably, check that you have the right `classroom.wasm`, right email, and try moving to a school IP.\
+If you receive a 403 error while connecting to Ably, check that you have the right `classroom.wasm`, right email, and try moving to a school IP.
 
 If you received no errors, congratulations! Simply leave the script running and you will be immune to unlocks, tab closing, and screen viewing (experimental).
 
