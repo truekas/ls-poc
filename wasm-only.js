@@ -11,7 +11,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 
 // --- Configuration ---
-const CONFIG = {
+let CONFIG = {
   email: "",
   customerId: "",
   ablyApiKey: "G52kOXvb7p7UbwFRV3ahn74m6xklosio2XUdLlTL",
@@ -617,7 +617,8 @@ function copyBytes(dst, src) {
 // STEP 1: Load the WASM and extract the JWT
 // ═══════════════════════════════════════════════════════════════
 
-async function getJwtFromWasm() {
+export async function getJwtFromWasm(newConfig = {}) {
+  if (newConfig) CONFIG = newConfig;
   const wasmPath = path.join(__dirname, "classroom.wasm");
   if (!fs.existsSync(wasmPath)) throw new Error("classroom.wasm not found");
 
@@ -660,7 +661,7 @@ async function getJwtFromWasm() {
         "x-api-key": CONFIG.ablyApiKey,
         "Content-Type": "application/json",
         customerid: CONFIG.customerId,
-        version: `chrome-${CONFIG.version}`,
+        'User-Agent': 'Mozilla/5.0 (X11; CrOS x86_64 16610.44.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.115 Safari/537.36'
       },
       body: JSON.stringify({ username: CONFIG.email }),
     });
@@ -854,7 +855,7 @@ function ask(question) {
   );
 }
 // COMMENT OUT IF USING WEB VIEWER
-(async () => {
+async function main() {
   try {
 
     // Prompt for Email
@@ -876,4 +877,6 @@ function ask(question) {
     console.error("\nFatal Error:", e.message);
     process.exit(1);
   }
-})();
+};
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

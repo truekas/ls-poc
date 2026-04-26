@@ -2,9 +2,12 @@ import Ably from 'ably';
 import { getJwtFromWasm } from './wasm-only.js';
 
 const devToolsUrl = `http://localhost:9222`;
-const lsOneExtId = 'emglnaklbigobcipgljkhlhffnhgfeme'
-const email = '1853413@fcpsschools.net';
-const cId = '61-6373-A000';
+const lsOneExtId = ''
+const email = '';
+const cId = '';
+const apiKey = '';
+
+let tabs = {};
 
 function cdpSession(wsUrl) {
   return new Promise((resolve, reject) => {
@@ -53,9 +56,15 @@ async function evaluate(wsUrl, expression) {
 }
 
 const targets = await (await fetch(`${devToolsUrl}/json`)).json()
-const wsUrl = targets.find(e => e.url === `chrome-extension://${lsOneExtId}/worker.js`).webSocketDebuggerUrl;
+console.log(targets)
+const ext = targets.find(e => e.url === `chrome-extension://${lsOneExtId}/worker.js`);
+if (!ext) {
+  console.error("Could not find LS one extension. Restart chrome and wait 15 seconds before trying again.")
+  process.exit(1);
+}
+const wsUrl = ext.webSocketDebuggerUrl;
 
-const token = await evaluate(
+const tok = await evaluate(
   wsUrl,
   `new Promise((resolve, reject) => {
     chrome.identity.getAuthToken({ interactive: false }, (token) => {
@@ -63,16 +72,34 @@ const token = await evaluate(
     });
   })`
 );
+console.log(tok);
+const jwt = await getJwtFromWasm({
+  email,
+  customerId: cId,
+  ablyApiKey: apiKey,
+  ablyUrl: "https://ably.lightspeedsystems.app/",
+  apiUri: "https://devices.classroom.relay.school",
+  telemetryHost: "agent-backend-api-production.lightspeedsystems.com",
+  version: "5.2.1.1771081763",
+});
 
-const jwt = await getJwtFromWasm();
 console.log(jwt)
-const res = await fetch(`https://ably.lightspeedsystems.app/?clientId=${encodeURIComponent(email)}`, {
+const res = await fetch(`https://ably.lightspeedsystems.app/auth-token?clientId=${encodeURIComponent(email)}&rnd=1721322822533904`, {
   headers: {
+    "Accept": "application/json, text/plain",
+    "Accept-Encoding": "gzip, deflate, br, zstd",
+    "Accept-Language": "en-US,en;q=0.9",
     "Content-Type": "application/json",
-    "X-API-Key": 'G52kOXvb7p7UbwFRV3ahn74m6xklosio2XUdLlTL',
-    "User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 16610.44.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.115 Safari/537.36",
+    exp: 10,
     jwt,
-    exp: '10',
+    Priority: 'u=1, i',
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": 'none',
+    "Sec-Fetch-Storage-Access": "active",
+    "User-Agent": "Mozilla/5.0 (X11; CrOS x86_64 16610.44.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.7727.115 Safari/537.36",
+    "X-Api-Key": apiKey,
+    "X-Google-Token": tok,
   }
 });
 console.log(res.status)
@@ -113,3 +140,26 @@ const channel = realtime.channels.get(`${cId}:${email}`)
 channel.subscribe((message) => {
   console.log(`[${message.name}]`, message.data);
 });
+
+channel.subscribe('tabs', m => {
+  tabs = m.data;
+});
+
+channel.subscribe('lock', () => {
+  console.log('unlocked')
+  publish('unlock');
+});
+
+channel.subscribe('closeTab', m => {
+  if (m.data.url) publish('url', m.data.url);
+  else publish('url', tabs.find(t => t.id === m.data.tabId).url);
+  console.log('reopened tab')
+});
+
+channel.subscribe('request_rtc', m => {
+  publish('offer_rtc', {
+    sessionId: m.data.sessionId,
+    sdp: 'nice try lolz'
+  });
+  console.log('spoofing rtc')
+})
