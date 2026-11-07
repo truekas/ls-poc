@@ -4,7 +4,39 @@ import { useState, useRef, useEffect } from 'react';
 import { Focus } from 'lucide-react'
 import Ably from 'ably';
 import md5 from './md5'
+const codec = 'VP8';
+const frameRate = 1;
+const keyFrame = 10000;
+const bitrates = { turn: { max: 2500, min: 1000, start: 2500 }, stun: { max: 100000, min: 10000, start: 50000 } };
 
+function setCodec(sdp) {
+  const match = sdp.match(new RegExp(`a=rtpmap:(\\d+) ${codec}/\\d+`));
+  if (!match) return sdp;
+  const pt = match[1];
+  return sdp.split('\r\n').map(line => {
+    if (!line.startsWith('m=video')) return line;
+    const parts = line.split(' ');
+    return [...parts.slice(0, 3), pt, ...parts.slice(3).filter(p => p !== pt)].join(' ');
+  }).join('\r\n');
+}
+function setBitrate(sdp) {
+  const lines = sdp.split('\r\n');
+  const idx = lines.findIndex(l => l.startsWith('m=video'));
+  if (idx === -1) return sdp;
+  const pt = lines[idx].split(' ')[3];
+  lines.splice(idx + 1, 0, `b=AS:${bitrates.stun.max}`);
+  lines.splice(idx + 1, 0, `a=fmtp:${pt} x-google-start-bitrate=${bitrates.stun.start};x-google-min-bitrate=${bitrates.stun.min};x-google-max-bitrate=${bitrates.stun.max}`);
+  return lines.join('\r\n');
+}
+function setKeyFrameInterval(sdp) {
+  return sdp.split('\r\n').map(l => l.startsWith('a=fmtp:') ? `${l};x-google-min-interval=${keyFrame}` : l).join('\r\n');
+}
+function setFrameRate(sdp) {
+  return sdp.split('\r\n').map(l => l.startsWith('a=fmtp:') ? `${l};max-fr=${frameRate}` : l).join('\r\n');
+}
+function mutateSdp(sdp) {
+  return setFrameRate(setKeyFrameInterval(setBitrate(setCodec(sdp))));
+}
 export default function HomePage() {
   const [emailsInput, setEmailsInput] = useState('');
   const [cId, setCId] = useState('');
@@ -290,56 +322,59 @@ export default function HomePage() {
       channel.publish('request_rtc', {
         sessionId: sessId,
         role: 'viewer',
-        want: ['video']
+        want: ['video'],
       });
 
-      // RTC setup
-      const pc = new RTCPeerConnection();
       const pendingIce = [];
+      let pc = null;
 
-      pc.ontrack = (event) => {
-        setSessions(prev => ({
-          ...prev,
-          [email]: {
-            ...prev[email],
-            videoStream: event.streams[0]
+      const initPc = (iceServers) => {
+        if (pc) return;
+        pc = new RTCPeerConnection({
+          iceServers: iceServers ?? [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+          ],
+        });
+
+        pc.ontrack = ({ streams }) => {
+          setSessions(prev => ({
+            ...prev,
+            [email]: { ...prev[email], videoStream: streams[0] },
+          }));
+        };
+
+        pc.onicecandidate = ({ candidate }) => {
+          if (candidate?.candidate) {
+            channel.publish('answer_rtc_ice', { sessionId: sessId, ice: candidate });
           }
-        }));
-      };
-
-      pc.onicecandidate = (event) => {
-        if (event.candidate?.candidate) {
-          channel.publish('answer_rtc_ice', {
-            sessionId: sessId,
-            ice: event.candidate
-          });
-        }
+        };
       };
 
       channel.subscribe(async (msg) => {
         if (msg.name === 'offer_rtc' && msg.data.sessionId === sessId) {
-          await pc.setRemoteDescription({ type: 'offer', sdp: msg.data.offer.sdp });
+          initPc(msg.data.iceServers);
+          await pc.setRemoteDescription({ type: 'offer', sdp: mutateSdp(msg.data.offer.sdp) });
           for (const ice of pendingIce) await pc.addIceCandidate(ice);
           pendingIce.length = 0;
-
           const answer = await pc.createAnswer();
+          answer.sdp = mutateSdp(answer.sdp);
           await pc.setLocalDescription(answer);
           channel.publish('answer_rtc', { sessionId: sessId, answer });
         }
-
         if (msg.name === 'offer_rtc_ice' && msg.data.sessionId === sessId) {
           const ice = msg.data.ice;
           if (!ice?.candidate) return;
-          if (pc.remoteDescription) await pc.addIceCandidate(ice);
-          else pendingIce.push(ice);
+          const candidate = new RTCIceCandidate(ice);
+          if (pc?.remoteDescription) await pc.addIceCandidate(candidate);
+          else pendingIce.push(candidate);
         }
       });
 
       setSessions(prev => ({
         ...prev,
-        [email]: { ...prev[email], pc }
+        [email]: { ...prev[email], pc },
       }));
-
       setConnectingEmail(null);
     } catch (err) {
       console.error('Error connecting to email:', err);
